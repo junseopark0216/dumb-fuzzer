@@ -1,5 +1,3 @@
-# fuzzer.py
-
 import subprocess
 import random
 import os
@@ -7,7 +5,7 @@ import shutil
 import time
 import signal
 
-# Crash로 인정할 Signal 목록
+# Crash signals to detect
 CRASH_SIGNALS = {
     signal.SIGSEGV,  # Segmentation Fault
     signal.SIGABRT,  # Abort
@@ -159,7 +157,7 @@ def Fuzzing(
 
         count += 1
 
-        # 1. 시드 선택
+        # 1. Select seed
         if use_seed:
 
             seed_path = random.choice(seeds)
@@ -173,13 +171,13 @@ def Fuzzing(
                 [random.randint(0, 255) for _ in range(32)]
             )
 
-        # 2. 변이 수행
+        # 2. Mutate
         mutated_data = Mutator(
             data,
             rate
         )
 
-        # 3. 임시 입력 생성
+        # 3. Create temp input file
         input_path = os.path.join(
             tmp_dir,
             f"fuzz_{time.time()}"
@@ -190,7 +188,7 @@ def Fuzzing(
 
         try:
 
-            # 4. 실행
+            # 4. Run target
             proc = subprocess.run(
                 [target_bin, "-s", input_path],
                 stdout=subprocess.DEVNULL,
@@ -198,7 +196,7 @@ def Fuzzing(
                 timeout=1
             )
 
-            # 5. Crash 탐지
+            # 5. Detect crash
             if proc.returncode < 0:
 
                 sig_num = -proc.returncode
@@ -251,11 +249,11 @@ def Fuzzing(
             except OSError:
                 pass
 
-        # 6. 상태 출력
+        # 6. Status output
         if count % 50 == 0:
 
             print(
-                f"[*] 실행 횟수: {count}회 진행 중...",
+                f"[*] Running... {count} iterations",
                 end='\r'
             )
 
@@ -263,11 +261,11 @@ def Fuzzing(
 if __name__ == "__main__":
 
     target = input(
-        "타겟 바이너리 경로: "
+        "Target binary path: "
     )
 
     use_seed_input = input(
-        "시드 파일을 사용하시겠습니까? (y/n): "
+        "Use seed files? (y/n): "
     ).lower()
 
     seeds = []
@@ -276,11 +274,11 @@ if __name__ == "__main__":
     if use_seed_input == 'y':
 
         seed_folder = input(
-            "시드 파일 폴더 경로: "
+            "Seed folder path: "
         )
 
         ext = input(
-            "시드 파일 확장자 입력 (전체 선택은 엔터): "
+            "Seed file extension (press Enter for all): "
         )
 
         seeds = [
@@ -295,7 +293,7 @@ if __name__ == "__main__":
         if not seeds:
 
             print(
-                "[!] 오류: 해당 조건의 파일이 없습니다."
+                "[!] Error: No matching files found."
             )
 
             exit()
@@ -303,18 +301,18 @@ if __name__ == "__main__":
         use_seed = True
 
         print(
-            f"[*] 시드 파일 {len(seeds)}개 발견"
+            f"[*] Found {len(seeds)} seed file(s)"
         )
 
     else:
 
         print(
-            "[*] 랜덤 데이터 기반 퍼징 모드 활성화"
+            "[*] Random data mode activated"
         )
 
     choice = int(
         input(
-            "변이 강도 선택 "
+            "Mutation rate "
             "(1: 0.1%, 2: 1%, 3: 5%, 4: 10%, 5: 20%): "
         )
     )
@@ -338,7 +336,7 @@ if __name__ == "__main__":
     )
 
     print(
-        f"[*] Fuzzing 시작 | 타겟: {target}"
+        f"[*] Fuzzing started | Target: {target}"
     )
 
     Fuzzing(
